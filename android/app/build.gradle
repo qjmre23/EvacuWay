@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.evacuway.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.evacuway.app"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "2.0.0"
+        // The dashboard URL the WebView loads. Override per build type as needed.
+        // No login/authentication is used.
+        buildConfigField "String", "DASHBOARD_URL", "\"https://qjmre23.github.io/EvacuWay/\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        debug {
+            // Point debug builds at a local dev server if desired:
+            // buildConfigField "String", "DASHBOARD_URL", "\"http://10.0.2.2:5173/\""
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

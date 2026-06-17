@@ -1,0 +1,51 @@
+# --- Secrets ---
+.env
+.env.local
+*.env.local
+backend/.env
+frontend/.env
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+backend/venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Node / frontend ---
+node_modules/
+frontend/dist/
+frontend/node_modules/
+*.log
+npm-debug.log*
+
+# --- Simulation outputs (large per-run files; aggregates are kept) ---
+data/results/*
+!data/results/.gitkeep
+!data/results/summary.json
+!data/results/statistics.json
+
+# --- OSMnx cache (regenerate via scripts/extract_osmnx_graph.py) ---
+data/metro_manila_graph.graphml
+data/nodes.csv
+data/edges.csv
+
+# --- Android ---
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.iml
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+desktop.ini
+
+# TS build info
+*.tsbuildinfo

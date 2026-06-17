@@ -1,0 +1,7 @@
+# EvacuWay — OPTIONAL geospatial stack for full Metro Manila OSMnx extraction.
+# Only needed to regenerate data/metro_manila_graph.graphml from OpenStreetMap.
+# The core simulation, API and smoke test do NOT require these.
+osmnx>=1.9
+geopandas>=0.14
+shapely>=2.0
+mesa>=2.1
