@@ -120,7 +120,5 @@ CSV_MISSING_LGUS = ["Makati", "Mandaluyong", "Pasay", "Pateros", "San Juan"]
 # --------------------------------------------------------------------------- #
 # CORS
 # --------------------------------------------------------------------------- #
-CORS_ORIGINS = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173",
-).split(",")
+_cors_env = os.getenv("CORS_ORIGINS", "")
+CORS_ORIGINS = _cors_env.split(",") if _cors_env else ["*"]
