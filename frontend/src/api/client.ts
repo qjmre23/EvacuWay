@@ -5,12 +5,18 @@ import axios from "axios";
 import type {
   FloodLevel,
   NetworkData,
+  RainfallData,
   ResultsBundle,
   SimulateResponse,
   Strategy,
 } from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+// Bundled static data lives next to index.html; resolve it against the Vite
+// base so it works at root, on a subpath (GitHub Pages), and from file:// (APK).
+const ASSET_BASE = import.meta.env.BASE_URL || "/"; // always ends with "/"
+const asset = (name: string) => `${ASSET_BASE}${name}`;
 
 const http = axios.create({ baseURL: BASE_URL, timeout: 8000 });
 
@@ -30,7 +36,7 @@ export async function checkHealth(): Promise<boolean> {
 export async function fetchNetwork(): Promise<NetworkData> {
   // Always prefer the bundled snapshot (fast + always available); the API
   // exposes the same data via /api/centers, /api/origins, /api/flood-points.
-  const r = await fetch("/network_data.json");
+  const r = await fetch(asset("network_data.json"));
   if (!r.ok) throw new Error("network_data.json missing");
   return (await r.json()) as NetworkData;
 }
@@ -40,7 +46,7 @@ export async function fetchResults(): Promise<ResultsBundle> {
     const r = await http.get("/api/summary");
     return { summary: r.data, statistics: {} } as ResultsBundle;
   } catch {
-    const r = await fetch("/sample_results.json");
+    const r = await fetch(asset("sample_results.json"));
     return (await r.json()) as ResultsBundle;
   }
 }
@@ -61,7 +67,7 @@ export async function simulate(args: SimulateArgs): Promise<SimulateResponse> {
     return { ...r.data, source: "api" } as SimulateResponse;
   } catch {
     // Fallback: bundled seed-42 routes for the chosen scenario.
-    const r = await fetch("/sample_routes.json");
+    const r = await fetch(asset("sample_routes.json"));
     const all = await r.json();
     const key = `${args.strategy}_${args.flood_level}`;
     const s = all[key];
@@ -79,6 +85,25 @@ export async function simulate(args: SimulateArgs): Promise<SimulateResponse> {
       meta: {},
       source: "bundled",
     };
+  }
+}
+
+export async function fetchRainfall(): Promise<RainfallData> {
+  // Prefer the live backend feed; fall back to the bundled sample so the
+  // PAGASA layer/card still render when the API (or PAGASA) is unreachable.
+  try {
+    const r = await http.get("/api/rainfall", { timeout: 7000 });
+    const d = r.data as RainfallData;
+    if (d?.stations?.length) return { ...d, live: true };
+  } catch {
+    /* fall through to bundled sample */
+  }
+  try {
+    const r = await fetch(asset("sample_rainfall.json"));
+    const d = (await r.json()) as RainfallData;
+    return { ...d, live: false };
+  } catch {
+    return { stations: [], live: false, source: "unavailable" };
   }
 }
 

@@ -195,6 +195,20 @@ def origins_payload() -> list[dict[str, Any]]:
     return out
 
 
+def center_display_capacity(node_id: str, base: float = 2200.0) -> int:
+    """Deterministic per-centre shelter capacity for display/PDF.
+
+    Uses a stable string hash (NOT Python's randomised ``hash``) so the value
+    matches the bundled ``network_data.json`` produced by
+    ``scripts/enrich_centers.mjs``.
+    """
+    x = 5381
+    for ch in str(node_id):
+        x = ((x * 33) ^ ord(ch)) & 0xFFFFFFFF
+    factor = 0.6 + 0.8 * ((x % 1000) / 1000.0)
+    return int(round(base * factor / 50.0) * 50)
+
+
 def centers_payload() -> list[dict[str, Any]]:
     """Evacuation centers for the map. Prototype graph centers, enriched with the
     named historical centers found in the CSV ``evacuation_center`` column."""
@@ -202,9 +216,13 @@ def centers_payload() -> list[dict[str, Any]]:
     out = []
     for n in evacuation_center_nodes(G):
         d = G.nodes[n]
+        barangay = d["barangay"]
         out.append({
-            "node_id": n, "name": d["notes"] or d["barangay"], "barangay": d["barangay"],
+            "node_id": n, "name": d["notes"] or barangay, "barangay": barangay,
             "lat": d["lat"], "lon": d["lon"], "elevation": d["elevation"],
+            "district": barangay or "Marikina",
+            "capacity": center_display_capacity(n),
+            "source": "xlsx", "official": True,
         })
     return out
 

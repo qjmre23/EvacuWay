@@ -1,10 +1,17 @@
 import { CircleMarker, MapContainer, Polyline, Popup, TileLayer } from "react-leaflet";
-import type { NetworkData, RouteGeom, Strategy } from "../types";
+import type { NetworkData, RainfallStation, RouteGeom, Strategy } from "../types";
 
 const STRAT_COLOR: Record<Strategy, string> = {
   A: "#2563eb",
   B: "#f59e0b",
   C: "#dc2626",
+};
+
+// Per-strategy line style: A solid · B dashed · C dotted.
+const STRAT_DASH: Record<Strategy, string | undefined> = {
+  A: undefined,
+  B: "10 7",
+  C: "2 7",
 };
 
 const RISK_COLOR: Record<string, string> = {
@@ -14,11 +21,24 @@ const RISK_COLOR: Record<string, string> = {
   Low: "#22c55e",
 };
 
+const ORIGIN_COLOR = "#fb923c"; // orange
+const CENTER_COLOR = "#22c55e"; // green
+const CENTER_XLSX_COLOR = "#3b82f6"; // blue (prototype XLSX seed)
+const RAIN_COLOR = "#8b5cf6"; // violet
+
+function rainColor(mm: number): string {
+  if (mm >= 15) return "#dc2626"; // intense
+  if (mm >= 7.5) return "#f97316"; // heavy
+  if (mm >= 2.5) return "#eab308"; // moderate
+  return "#3b82f6"; // light
+}
+
 export interface LayerToggles {
   flood: boolean;
   centers: boolean;
   origins: boolean;
   routes: boolean;
+  rainfall: boolean;
 }
 
 interface Props {
@@ -26,19 +46,26 @@ interface Props {
   routes: RouteGeom[];
   strategy: Strategy;
   layers: LayerToggles;
+  rainfall?: RainfallStation[];
 }
 
-export default function MapView({ network, routes, strategy, layers }: Props) {
+export default function MapView({ network, routes, strategy, layers, rainfall = [] }: Props) {
   const { bbox } = network;
-  const center: [number, number] = [
-    (bbox.min_lat + bbox.max_lat) / 2,
-    (bbox.min_lon + bbox.max_lon) / 2,
-  ];
+  // Centre on the actual network (evacuation centres / origins) so routes are
+  // visible on load, falling back to the metro bbox midpoint if absent.
+  const anchor = network.centers.length ? network.centers : network.origins;
+  const center: [number, number] = anchor.length
+    ? [
+        anchor.reduce((s, c) => s + c.lat, 0) / anchor.length,
+        anchor.reduce((s, c) => s + c.lon, 0) / anchor.length,
+      ]
+    : [(bbox.min_lat + bbox.max_lat) / 2, (bbox.min_lon + bbox.max_lon) / 2];
+  const maxRain = Math.max(1, ...rainfall.map((r) => r.rainfall_mm_hr));
 
   return (
     <MapContainer
       center={center}
-      zoom={11}
+      zoom={13}
       scrollWheelZoom
       style={{ height: "100%", width: "100%" }}
     >
@@ -75,10 +102,73 @@ export default function MapView({ network, routes, strategy, layers }: Props) {
             positions={r.coords}
             pathOptions={{
               color: STRAT_COLOR[strategy],
-              weight: 2,
-              opacity: 0.55,
+              weight: strategy === "C" ? 3.5 : 3,
+              opacity: 0.85,
+              dashArray: STRAT_DASH[strategy],
+              lineCap: "round",
             }}
           />
+        ))}
+
+      {/* Route endpoints — every route starts at an ORANGE origin and ends at a
+          GREEN evacuation centre, drawn on top of the road-following line. */}
+      {layers.routes &&
+        routes.map((r, i) => {
+          const start = r.coords[0];
+          const end = r.coords[r.coords.length - 1];
+          if (!start || !end) return null;
+          return (
+            <CircleMarker
+              key={`rs${i}`}
+              center={start}
+              radius={4}
+              pathOptions={{ color: "#7c2d12", fillColor: ORIGIN_COLOR, fillOpacity: 1, weight: 1 }}
+            >
+              <Popup>
+                <b>Origin zone</b>
+                <br />
+                {r.population.toLocaleString()} people → evacuation centre
+              </Popup>
+            </CircleMarker>
+          );
+        })}
+      {layers.routes &&
+        routes.map((r, i) => {
+          const end = r.coords[r.coords.length - 1];
+          if (!end) return null;
+          return (
+            <CircleMarker
+              key={`re${i}`}
+              center={end}
+              radius={5}
+              pathOptions={{ color: "#14532d", fillColor: CENTER_COLOR, fillOpacity: 1, weight: 1.5 }}
+            >
+              <Popup>
+                <b>Evacuation centre (route end)</b>
+              </Popup>
+            </CircleMarker>
+          );
+        })}
+
+      {layers.rainfall &&
+        rainfall.map((s, i) => (
+          <CircleMarker
+            key={`rain${i}`}
+            center={[s.lat, s.lon]}
+            radius={6 + 14 * (s.rainfall_mm_hr / maxRain)}
+            pathOptions={{
+              color: RAIN_COLOR,
+              fillColor: rainColor(s.rainfall_mm_hr),
+              fillOpacity: 0.45,
+              weight: 1,
+            }}
+          >
+            <Popup>
+              <b>{s.name}</b>
+              <br />
+              PAGASA station · {s.rainfall_mm_hr.toFixed(1)} mm/h
+            </Popup>
+          </CircleMarker>
         ))}
 
       {layers.origins &&
@@ -87,7 +177,7 @@ export default function MapView({ network, routes, strategy, layers }: Props) {
             key={o.node_id}
             center={[o.lat, o.lon]}
             radius={3}
-            pathOptions={{ color: "#fb923c", fillColor: "#fb923c", fillOpacity: 0.8, weight: 1 }}
+            pathOptions={{ color: ORIGIN_COLOR, fillColor: ORIGIN_COLOR, fillOpacity: 0.8, weight: 1 }}
           >
             <Popup>
               <b>Origin zone — {o.barangay}</b>
@@ -100,22 +190,39 @@ export default function MapView({ network, routes, strategy, layers }: Props) {
         ))}
 
       {layers.centers &&
-        network.centers.map((c) => (
-          <CircleMarker
-            key={c.node_id}
-            center={[c.lat, c.lon]}
-            radius={5}
-            pathOptions={{ color: "#16a34a", fillColor: "#22c55e", fillOpacity: 0.95, weight: 1.5 }}
-          >
-            <Popup>
-              <b>Evacuation center</b>
-              <br />
-              {c.name || c.barangay}
-              <br />
-              Elevation: {c.elevation} m asl
-            </Popup>
-          </CircleMarker>
-        ))}
+        network.centers.map((c) => {
+          const isCdra = c.source === "cdra";
+          const official = c.official ?? isCdra;
+          return (
+            <CircleMarker
+              key={c.node_id}
+              center={[c.lat, c.lon]}
+              radius={5}
+              pathOptions={{
+                color: official ? "#14532d" : "#1e3a8a",
+                fillColor: official ? CENTER_COLOR : CENTER_XLSX_COLOR,
+                fillOpacity: 0.95,
+                weight: 1.5,
+              }}
+            >
+              <Popup>
+                <b>{c.name || c.barangay}</b>
+                <br />
+                {c.district || c.barangay}
+                {c.capacity ? (
+                  <>
+                    <br />
+                    Capacity: {c.capacity.toLocaleString()} persons
+                  </>
+                ) : null}
+                <br />
+                Elevation: {c.elevation} m asl
+                <br />
+                {isCdra ? "✓ Official QC CDRA 2023" : "Designated centre · Marikina dataset"}
+              </Popup>
+            </CircleMarker>
+          );
+        })}
     </MapContainer>
   );
 }

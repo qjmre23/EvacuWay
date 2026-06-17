@@ -72,6 +72,13 @@ def get_flood_points():
     return {"points": data_loader.flood_points_payload()}
 
 
+@router.get("/rainfall")
+def get_rainfall():
+    """Live PAGASA automatic-weather-station rainfall (best-effort, never errors)."""
+    from . import rainfall
+    return rainfall.get_rainfall()
+
+
 # --------------------------------------------------------------------------- #
 # Simulation
 # --------------------------------------------------------------------------- #

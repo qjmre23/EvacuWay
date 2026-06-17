@@ -12,9 +12,12 @@ android {
         targetSdk 34
         versionCode 1
         versionName "2.0.0"
-        // The dashboard URL the WebView loads. Override per build type as needed.
-        // No login/authentication is used.
-        buildConfigField "String", "DASHBOARD_URL", "\"https://qjmre23.github.io/EvacuWay/\""
+        // The dashboard the WebView loads. Defaults to the build bundled into
+        // the APK (assets/www) so the app works offline; map tiles and the
+        // optional live API/PAGASA feed still use the network when available.
+        // To load a hosted build instead, comment this out and use the URL below.
+        buildConfigField "String", "DASHBOARD_URL", "\"file:///android_asset/www/index.html\""
+        // buildConfigField "String", "DASHBOARD_URL", "\"https://qjmre23.github.io/EvacuWay/\""
     }
 
     buildFeatures {
@@ -42,3 +45,19 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.webkit:webkit:1.11.0'
 }
+
+// Bundle the built dashboard (frontend/dist) into the APK as assets/www so the
+// WebView can load it offline. Run `npm run build` in ../frontend first; this
+// task refreshes the bundled copy on every Android build.
+def webDist = file("${rootDir}/../frontend/dist")
+tasks.register('copyWebAssets', Copy) {
+    from webDist
+    into "${projectDir}/src/main/assets/www"
+    doFirst {
+        if (!webDist.exists()) {
+            logger.warn("frontend/dist not found — run `npm run build` in frontend/ " +
+                "before building the APK so the dashboard is bundled.")
+        }
+    }
+}
+tasks.named('preBuild') { dependsOn 'copyWebAssets' }

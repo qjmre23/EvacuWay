@@ -11,9 +11,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PUBLIC = path.join(ROOT, "frontend", "public");
-const LEAFLET = path.join(ROOT, "frontend", "node_modules", "leaflet", "dist");
 const PORT = Number(process.argv[2] || 5181);
+// Optional root: "public" (verifier, default) or "dist" (built app).
+const ROOT_DIR = process.argv[3] || "public";
+const PUBLIC = path.join(ROOT, "frontend", ROOT_DIR);
+const LEAFLET = path.join(ROOT, "frontend", "node_modules", "leaflet", "dist");
+const INDEX = ROOT_DIR === "dist" ? "/index.html" : "/route_verify.html";
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -41,7 +44,7 @@ function send(res, file) {
 http
   .createServer((req, res) => {
     let url = decodeURIComponent((req.url || "/").split("?")[0]);
-    if (url === "/") url = "/route_verify.html";
+    if (url === "/") url = INDEX;
     if (url.startsWith("/vendor/leaflet/")) {
       send(res, path.join(LEAFLET, url.replace("/vendor/leaflet/", "")));
       return;

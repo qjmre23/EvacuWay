@@ -44,6 +44,9 @@ android/app/build/
 android/local.properties
 android/.idea/
 *.iml
+# Bundled web dashboard (generated from frontend/dist by the copyWebAssets
+# Gradle task / npm run build — do not commit the built copy).
+android/app/src/main/assets/www/
 
 # --- OS / editor ---
 .DS_Store

@@ -10,6 +10,7 @@ const ITEMS: { key: keyof LayerToggles; label: string; swatch: string }[] = [
   { key: "centers", label: "Evacuation centers", swatch: "#22c55e" },
   { key: "origins", label: "Origin zones", swatch: "#fb923c" },
   { key: "routes", label: "Evacuation routes", swatch: "#38bdf8" },
+  { key: "rainfall", label: "PAGASA rainfall", swatch: "#8b5cf6" },
 ];
 
 export default function Legend({ layers, onToggle }: Props) {
@@ -31,9 +32,9 @@ export default function Legend({ layers, onToggle }: Props) {
         </label>
       ))}
       <div className="mt-2 border-t border-white/10 pt-1 text-white/50">
-        Routes: <span style={{ color: "#2563eb" }}>A</span> ·{" "}
-        <span style={{ color: "#f59e0b" }}>B</span> ·{" "}
-        <span style={{ color: "#dc2626" }}>C</span>
+        Routes: <span style={{ color: "#2563eb" }}>A solid</span> ·{" "}
+        <span style={{ color: "#f59e0b" }}>B dashed</span> ·{" "}
+        <span style={{ color: "#dc2626" }}>C dotted</span>
       </div>
     </div>
   );

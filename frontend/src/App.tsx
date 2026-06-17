@@ -3,11 +3,14 @@ import KpiCards from "./components/KpiCards";
 import Legend from "./components/Legend";
 import LoadingOverlay from "./components/LoadingOverlay";
 import MapView, { type LayerToggles } from "./components/MapView";
+import RainfallCard from "./components/RainfallCard";
 import ResultsPanel from "./components/ResultsPanel";
 import ScenarioPanel from "./components/ScenarioPanel";
 import { useNetwork } from "./hooks/useNetwork";
+import { useRainfall } from "./hooks/useRainfall";
 import { useSimulation } from "./hooks/useSimulation";
 import type { FloodLevel, KPIs, Strategy } from "./types";
+import { exportCentersPdf } from "./utils/exportPdf";
 
 const CITY_LIST = [
   "Caloocan", "Las Piñas", "Malabon", "Manila", "Marikina", "Muntinlupa",
@@ -19,6 +22,7 @@ type Tab = "map" | "controls" | "results";
 export default function App() {
   const { network, results, apiOnline, loading, error } = useNetwork();
   const sim = useSimulation();
+  const rainfall = useRainfall();
 
   const [strategy, setStrategy] = useState<Strategy>("B");
   const [flood, setFlood] = useState<FloodLevel>("moderate");
@@ -29,8 +33,11 @@ export default function App() {
     centers: true,
     origins: false,
     routes: true,
+    rainfall: false,
   });
   const [tab, setTab] = useState<Tab>("map");
+
+  const rainfallLive = rainfall.live && rainfall.stations.length > 0;
 
   const baseline: KPIs | null = useMemo(() => {
     const cells = results?.summary?.cells ?? [];
@@ -74,13 +81,20 @@ export default function App() {
             conditions · NCR (17 LGUs) · no login required
           </p>
         </div>
-        <span
-          className={`hidden rounded-full px-2 py-1 text-[11px] md:inline ${
-            apiOnline ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"
-          }`}
-        >
-          {apiOnline ? "Live API" : "Bundled data"}
-        </span>
+        <div className="hidden items-center gap-2 md:flex">
+          {rainfallLive && (
+            <span className="rounded-full bg-violet-500/20 px-2 py-1 text-[11px] text-violet-300">
+              PAGASA live rainfall
+            </span>
+          )}
+          <span
+            className={`rounded-full px-2 py-1 text-[11px] ${
+              apiOnline ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"
+            }`}
+          >
+            {apiOnline ? "Live API" : "Bundled data"}
+          </span>
+        </div>
       </header>
 
       {/* mobile tabs */}
@@ -119,6 +133,25 @@ export default function App() {
             onToggleCity={toggleCity}
             onRun={run}
           />
+
+          <div className="mt-4">
+            <RainfallCard data={rainfall} />
+          </div>
+
+          <button
+            onClick={() =>
+              network &&
+              exportCentersPdf(network.centers, {
+                strategy,
+                flood,
+                studyArea: network.meta?.study_area,
+              })
+            }
+            disabled={!network}
+            className="btn mt-4 w-full bg-white/10 py-2 text-sm font-semibold text-white hover:bg-white/20 disabled:opacity-50"
+          >
+            ⤓ Download evacuation centres (PDF)
+          </button>
         </aside>
 
         {/* main */}
@@ -137,6 +170,7 @@ export default function App() {
                   routes={layers.routes ? routes : []}
                   strategy={strategy}
                   layers={layers}
+                  rainfall={rainfall.stations}
                 />
                 <Legend layers={layers} onToggle={toggleLayer} />
               </>

@@ -92,6 +92,7 @@ Network scale ([docs/network_scale.md](docs/network_scale.md)) ·
 Results ([docs/revised_results_analysis.md](docs/revised_results_analysis.md)) ·
 Setup ([docs/setup.md](docs/setup.md)) ·
 Road-following routes ([docs/road_following.md](docs/road_following.md)) ·
+Android APK build ([docs/android_build.md](docs/android_build.md)) ·
 API ([docs/api_reference.md](docs/api_reference.md)) ·
 Architecture ([docs/architecture.md](docs/architecture.md)) ·
 Deployment ([docs/deployment.md](docs/deployment.md)) ·
