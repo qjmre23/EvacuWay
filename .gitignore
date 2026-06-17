@@ -56,3 +56,6 @@ desktop.ini
 
 # TS build info
 *.tsbuildinfo
+
+# Local Claude Code config (do not push)
+.claude/
