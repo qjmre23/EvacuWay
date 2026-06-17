@@ -12,11 +12,6 @@ import { useSimulation } from "./hooks/useSimulation";
 import type { FloodLevel, KPIs, Strategy } from "./types";
 import { exportCentersPdf } from "./utils/exportPdf";
 
-const CITY_LIST = [
-  "Caloocan", "Las Piñas", "Malabon", "Manila", "Marikina", "Muntinlupa",
-  "Navotas", "Parañaque", "Pasig", "Quezon City", "Taguig", "Valenzuela",
-];
-
 type Tab = "map" | "controls" | "results";
 
 export default function App() {
@@ -28,6 +23,13 @@ export default function App() {
   const [flood, setFlood] = useState<FloodLevel>("moderate");
   const [seed, setSeed] = useState(42);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
+
+  // Derive city list from actual network data so it always matches what the
+  // backend has (no hardcoded list that can go stale).
+  const cityList = useMemo(() => {
+    if (!network?.origins?.length) return [];
+    return [...new Set(network.origins.map((o) => o.city).filter(Boolean))].sort();
+  }, [network]);
   const [layers, setLayers] = useState<LayerToggles>({
     flood: true,
     centers: true,
@@ -123,7 +125,7 @@ export default function App() {
             strategy={strategy}
             flood={flood}
             seed={seed}
-            cities={CITY_LIST}
+            cities={cityList}
             selectedCities={selectedCities}
             running={sim.running}
             apiOnline={apiOnline}

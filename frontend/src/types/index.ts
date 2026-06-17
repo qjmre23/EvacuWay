@@ -48,6 +48,7 @@ export interface Center {
 
 export interface Origin {
   node_id: string;
+  city: string;
   barangay: string;
   population: number;
   lat: number;
