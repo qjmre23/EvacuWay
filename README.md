@@ -8,7 +8,7 @@ compares **three routing strategies** under **progressive flood severity** acros
 (NCR)**, and reports six performance indicators including an explicit **equity** measure.
 
 > This is an evacuation-routing simulation study. It contains **no** machine-learning,
-> text-classification, or fake-news content.
+> text-classification, or fake-news content
 
 ## Study scope
 - **Study area:** Metro Manila (National Capital Region), **all 17 LGUs**.
