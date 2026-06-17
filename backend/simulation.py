@@ -330,13 +330,7 @@ class EvacuationSimulator:
         origins = origin_zone_nodes(self.G)
         if city_subset:
             wanted = {c.strip().lower() for c in city_subset}
-            filtered = [
-                o for o in origins
-                if self.G.nodes[o].get("city", "").lower() in wanted
-            ]
-            if filtered:
-                origins = filtered
-            # If no match (e.g. city not in dataset), keep all origins
+            origins = [o for o in origins if self.G.nodes[o]["barangay"].lower() in wanted] or origins
 
         if strategy == "A":
             paths, flows, clearance = self._route_strategy_a(H, centers, origins)

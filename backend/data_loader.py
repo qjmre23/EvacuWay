@@ -1,12 +1,19 @@
 """
 EvacuWay — data loading, graph construction and caching.
 
-Graph is built from the metro_manila_flood_dataset.csv:
-* One Origin Zone per unique (city_municipality, barangay) pair — 51 zones.
-* One Evacuation Center per unique named center in the CSV — 55 centers.
-* k-NN proximity edges between all nodes (k=8).
+This module turns the two ground-truth datasets into the in-memory road-network
+graph used by the simulation engine:
 
-Population proxy: max(affected_population) per zone, scaled to ≤500 agents.
+* ``metro_manila_flood_dataset.csv`` — 2,200 flood-incident records (12 NCR
+  cities, 2000-2024). Drives flood susceptibility, origin-zone population loads,
+  evacuation-center seeds and KPI validation benchmarks.
+* ``Evacuation_Marikina_Dataset.xlsx`` — 1,250-node Marikina **prototype seed**
+  sub-network. Used here to build a runnable, fully offline prototype graph.
+
+For full Metro-Manila runs the production pipeline replaces this prototype graph
+with an OSMnx-extracted NCR ``drive`` network (see ``scripts/extract_osmnx_graph.py``
+and ``docs/network_scale.md``). OSMnx / GeoPandas are therefore optional — the
+prototype path below has no heavy geospatial dependencies and always runs.
 """
 from __future__ import annotations
 
@@ -24,6 +31,7 @@ from . import config
 # Helpers
 # --------------------------------------------------------------------------- #
 def _haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance in metres."""
     r = 6_371_000.0
     p1, p2 = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
@@ -37,11 +45,13 @@ def _risk_to_fe(level: str) -> float:
 
 
 def _capacity_for_length(length_m: float) -> tuple[int, str]:
-    if length_m >= 12_000:
+    """Deterministic prototype proxy: longer edges behave like higher road classes
+    (arterials), shorter edges like residential streets. Mirrors Assumption #8."""
+    if length_m >= 1200:
         return config.ROAD_CAPACITY["trunk"], "trunk"
-    if length_m >= 7_000:
+    if length_m >= 700:
         return config.ROAD_CAPACITY["primary"], "primary"
-    if length_m >= 3_000:
+    if length_m >= 350:
         return config.ROAD_CAPACITY["secondary"], "secondary"
     return config.ROAD_CAPACITY["residential"], "residential"
 
@@ -55,151 +65,108 @@ def load_flood_csv() -> pd.DataFrame:
     return df
 
 
+@lru_cache(maxsize=1)
+def load_marikina_xlsx() -> pd.DataFrame:
+    df = pd.read_excel(config.DATA_XLSX_PATH)
+    df.columns = [str(c).strip() for c in df.columns]
+    return df
+
+
+def _node_risk(row: pd.Series) -> str:
+    """The XLSX encodes the risk level inside the free-text ``Notes`` column
+    (e.g. 'Low risk', 'Moderate risk', 'High risk'). Fall back gracefully."""
+    notes = str(row.get("Notes", "")).lower()
+    for level in ("very high", "high", "moderate", "low"):
+        if level in notes:
+            return level.title()
+    return "Moderate"
+
+
 # --------------------------------------------------------------------------- #
-# Graph construction — Metro Manila, CSV-driven
+# Graph construction (prototype seed)
 # --------------------------------------------------------------------------- #
 @lru_cache(maxsize=1)
-def build_graph(k_neighbours: int = 8) -> nx.Graph:
-    """Build the Metro Manila evacuation graph from metro_manila_flood_dataset.csv.
+def build_graph(k_neighbours: int = 4) -> nx.Graph:
+    """Build the prototype road-network graph from the Marikina seed nodes.
 
-    Node types
-    ----------
-    * Origin Zone  — one per unique (city_municipality, barangay) pair (51 nodes).
-      Attributes: city, barangay, population, lat, lon, flood_risk, fe.
-    * Evacuation Center — one per unique named center (55 nodes).
-      Attributes: city, barangay, notes (center name), lat, lon, is_center.
-
-    Edges
-    -----
-    k-nearest-neighbor proximity graph (k=8) over all nodes, with haversine
-    distance as edge length, BPR capacity by road-class proxy, and flood
-    susceptibility averaged from endpoint fe values.
+    Each node is connected to its ``k`` nearest neighbours (k-NN proximity graph),
+    a standard stand-in for road adjacency when explicit edge geometry is absent.
+    Edge attributes: ``length`` (m), ``capacity`` (veh/hr), ``road_class`` and
+    ``flood_susceptibility`` (fe = mean of endpoint susceptibilities).
     """
-    df = load_flood_csv()
+    df = load_marikina_xlsx().reset_index(drop=True)
     G = nx.Graph()
+
     coords: list[tuple[float, float]] = []
-    node_ids: list[str] = []
-
-    # ── Origin Zones ──────────────────────────────────────────────────────── #
-    zone_df = (
-        df.groupby(["city_municipality", "barangay"])
-        .agg(
-            lat=("latitude", "median"),
-            lon=("longitude", "median"),
-            risk=("flood_risk_level", lambda x: x.mode().iloc[0] if len(x) else "Moderate"),
-            population=("affected_population", "max"),
-        )
-        .reset_index()
-        .dropna(subset=["lat", "lon"])
-    )
-
-    for i, row in zone_df.iterrows():
-        city = str(row["city_municipality"])
-        barangay = str(row["barangay"])
-        risk = str(row["risk"]).strip()
-        raw_pop = int(row["population"])
-        # Scale to tractable agent count (raw values are 100 k-200 k residents)
-        pop = min(max(int(raw_pop / 400), 50), config.MAX_AGENTS_PER_ZONE)
-        nid = f"OZ_{city[:3].upper()}_{i:03d}"
-
+    for i, row in df.iterrows():
+        nid = str(row["Node ID"])
+        ntype = str(row["Node Type"]).strip()
+        risk = _node_risk(row)
+        is_center = str(row["Is Evacuation Center"]).strip().lower() == "yes"
+        pop = int(row.get("Population Count", 0) or 0)
+        lat = float(row["Centroid Latitude"])
+        lon = float(row["Centroid Longitude"])
+        coords.append((lat, lon))
         G.add_node(
             nid,
-            node_type="Origin Zone",
-            city=city,
-            barangay=barangay,
-            population=pop,
-            raw_population=raw_pop,
-            lat=float(row["lat"]),
-            lon=float(row["lon"]),
+            node_type=ntype,
+            barangay=str(row.get("Barangay Name", "")),
+            population=min(pop, config.MAX_AGENTS_PER_ZONE) if ntype == "Origin Zone" else 0,
+            raw_population=pop,
+            elevation=float(row.get("Elevation (m asl)", 0) or 0),
+            lat=lat,
+            lon=lon,
+            is_center=is_center,
             flood_risk=risk,
             fe=_risk_to_fe(risk),
-            is_center=False,
-            elevation=0.0,
-            notes="",
+            notes=str(row.get("Notes", "")),
         )
-        coords.append((float(row["lat"]), float(row["lon"])))
-        node_ids.append(nid)
 
-    # ── Evacuation Centers ─────────────────────────────────────────────────── #
-    centers_df = (
-        df[df["evacuation_center"].notna()]
-        .groupby("evacuation_center")
-        .agg(
-            lat=("latitude", "median"),
-            lon=("longitude", "median"),
-            city=("city_municipality", lambda x: x.mode().iloc[0]),
-            barangay=("barangay", lambda x: x.mode().iloc[0]),
-        )
-        .reset_index()
-        .dropna(subset=["lat", "lon"])
-    )
+    ids = [str(r["Node ID"]) for _, r in df.iterrows()]
 
-    for i, row in centers_df.iterrows():
-        nid = f"EC_{i:03d}"
-        G.add_node(
-            nid,
-            node_type="Evacuation Center",
-            city=str(row["city"]),
-            barangay=str(row["barangay"]),
-            population=0,
-            raw_population=0,
-            lat=float(row["lat"]),
-            lon=float(row["lon"]),
-            flood_risk="Low",
-            fe=_risk_to_fe("low"),
-            is_center=True,
-            elevation=0.0,
-            notes=str(row["evacuation_center"]),
-        )
-        coords.append((float(row["lat"]), float(row["lon"])))
-        node_ids.append(nid)
-
-    # ── k-NN edges ─────────────────────────────────────────────────────────── #
-    n = len(coords)
-    for i in range(n):
-        lat1, lon1 = coords[i]
-        dists = sorted(
-            (_haversine_m(lat1, lon1, coords[j][0], coords[j][1]), j)
-            for j in range(n) if j != i
-        )
+    # k-NN edges. O(n^2) over 1,250 nodes is fine (~1.5M dist ops, sub-second).
+    for i, (lat1, lon1) in enumerate(coords):
+        dists = []
+        for j, (lat2, lon2) in enumerate(coords):
+            if i == j:
+                continue
+            dists.append((_haversine_m(lat1, lon1, lat2, lon2), j))
+        dists.sort(key=lambda t: t[0])
         for d, j in dists[:k_neighbours]:
-            u, v = node_ids[i], node_ids[j]
+            u, v = ids[i], ids[j]
             if G.has_edge(u, v):
                 continue
-            length = max(d, 100.0)
+            length = max(d, 25.0)
             cap, klass = _capacity_for_length(length)
-            fe = round((G.nodes[u]["fe"] + G.nodes[v]["fe"]) / 2.0, 4)
+            fe = (G.nodes[u]["fe"] + G.nodes[v]["fe"]) / 2.0
             G.add_edge(
                 u, v,
                 length=length,
-                travel_time=length / config.AGENT_SPEED_M_PER_MIN,
+                travel_time=length / config.AGENT_SPEED_M_PER_MIN,  # minutes (free flow)
                 capacity=cap,
                 road_class=klass,
-                flood_susceptibility=fe,
+                flood_susceptibility=round(fe, 4),
             )
 
-    # ── Ensure connectivity ─────────────────────────────────────────────────── #
+    # Ensure the graph is connected so reachability is meaningful pre-flood.
     if not nx.is_connected(G):
         comps = list(nx.connected_components(G))
         comps.sort(key=len, reverse=True)
         main = comps[0]
         for comp in comps[1:]:
+            # connect each isolated component to the nearest main-component node
             cnode = next(iter(comp))
             clat, clon = G.nodes[cnode]["lat"], G.nodes[cnode]["lon"]
             best = min(
                 main,
                 key=lambda m: _haversine_m(clat, clon, G.nodes[m]["lat"], G.nodes[m]["lon"]),
             )
-            d = max(_haversine_m(clat, clon, G.nodes[best]["lat"], G.nodes[best]["lon"]), 100.0)
+            d = max(_haversine_m(clat, clon, G.nodes[best]["lat"], G.nodes[best]["lon"]), 25.0)
             cap, klass = _capacity_for_length(d)
-            fe = round((G.nodes[cnode]["fe"] + G.nodes[best]["fe"]) / 2.0, 4)
-            G.add_edge(
-                cnode, best,
-                length=d, travel_time=d / config.AGENT_SPEED_M_PER_MIN,
-                capacity=cap, road_class=klass, flood_susceptibility=fe,
-            )
+            fe = (G.nodes[cnode]["fe"] + G.nodes[best]["fe"]) / 2.0
+            G.add_edge(cnode, best, length=d, travel_time=d / config.AGENT_SPEED_M_PER_MIN,
+                       capacity=cap, road_class=klass, flood_susceptibility=round(fe, 4))
             main |= comp
-
     return G
 
 
@@ -213,30 +180,28 @@ def evacuation_center_nodes(G: nx.Graph | None = None) -> list[str]:
 
 def origin_zone_nodes(G: nx.Graph | None = None) -> list[str]:
     G = G or build_graph()
-    return [
-        n for n, d in G.nodes(data=True)
-        if d.get("node_type") == "Origin Zone" and d.get("population", 0) > 0
-    ]
+    return [n for n, d in G.nodes(data=True) if d.get("node_type") == "Origin Zone" and d.get("population", 0) > 0]
 
 
 def origins_payload() -> list[dict[str, Any]]:
     G = build_graph()
-    return [
-        {
-            "node_id": n,
-            "city": d["city"],
-            "barangay": d["barangay"],
-            "population": d["population"],
-            "lat": d["lat"],
-            "lon": d["lon"],
-            "flood_risk": d["flood_risk"],
-        }
-        for n in origin_zone_nodes(G)
-        for d in [G.nodes[n]]
-    ]
+    out = []
+    for n in origin_zone_nodes(G):
+        d = G.nodes[n]
+        out.append({
+            "node_id": n, "barangay": d["barangay"], "population": d["population"],
+            "lat": d["lat"], "lon": d["lon"], "flood_risk": d["flood_risk"],
+        })
+    return out
 
 
 def center_display_capacity(node_id: str, base: float = 2200.0) -> int:
+    """Deterministic per-centre shelter capacity for display/PDF.
+
+    Uses a stable string hash (NOT Python's randomised ``hash``) so the value
+    matches the bundled ``network_data.json`` produced by
+    ``scripts/enrich_centers.mjs``.
+    """
     x = 5381
     for ch in str(node_id):
         x = ((x * 33) ^ ord(ch)) & 0xFFFFFFFF
@@ -245,40 +210,38 @@ def center_display_capacity(node_id: str, base: float = 2200.0) -> int:
 
 
 def centers_payload() -> list[dict[str, Any]]:
+    """Evacuation centers for the map. Prototype graph centers, enriched with the
+    named historical centers found in the CSV ``evacuation_center`` column."""
     G = build_graph()
-    return [
-        {
-            "node_id": n,
-            "name": d["notes"] or d["barangay"],
-            "city": d["city"],
-            "barangay": d["barangay"],
-            "lat": d["lat"],
-            "lon": d["lon"],
-            "elevation": d["elevation"],
-            "district": d["city"],
+    out = []
+    for n in evacuation_center_nodes(G):
+        d = G.nodes[n]
+        barangay = d["barangay"]
+        out.append({
+            "node_id": n, "name": d["notes"] or barangay, "barangay": barangay,
+            "lat": d["lat"], "lon": d["lon"], "elevation": d["elevation"],
+            "district": barangay or "Marikina",
             "capacity": center_display_capacity(n),
-            "source": "csv",
-            "official": True,
-        }
-        for n in evacuation_center_nodes(G)
-        for d in [G.nodes[n]]
-    ]
+            "source": "xlsx", "official": True,
+        })
+    return out
 
 
 def flood_points_payload(limit: int = 800) -> list[dict[str, Any]]:
+    """Flood-risk heat points from the CSV (lat/lon + risk level)."""
     df = load_flood_csv()
     cols = ["latitude", "longitude", "flood_risk_level", "flood_depth_meters",
             "city_municipality", "barangay"]
     sub = df[cols].dropna(subset=["latitude", "longitude"]).head(limit)
-    return [
-        {
+    pts = []
+    for _, r in sub.iterrows():
+        pts.append({
             "lat": float(r["latitude"]), "lon": float(r["longitude"]),
             "risk": r["flood_risk_level"], "depth": float(r["flood_depth_meters"]),
             "fe": _risk_to_fe(r["flood_risk_level"]),
             "city": r["city_municipality"], "barangay": r["barangay"],
-        }
-        for _, r in sub.iterrows()
-    ]
+        })
+    return pts
 
 
 def dataset_stats() -> dict[str, Any]:
@@ -302,18 +265,18 @@ def dataset_stats() -> dict[str, Any]:
 
 def graph_summary() -> dict[str, Any]:
     G = build_graph()
-    cities = sorted({d["city"] for _, d in G.nodes(data=True) if d.get("city")})
     return {
-        "nodes": G.number_of_nodes(),
-        "edges": G.number_of_edges(),
+        "prototype_nodes": G.number_of_nodes(),
+        "prototype_edges": G.number_of_edges(),
         "origin_zones": len(origin_zone_nodes(G)),
         "evacuation_centers": len(evacuation_center_nodes(G)),
-        "cities": cities,
+        "intersections": sum(1 for _, d in G.nodes(data=True) if d.get("node_type") == "Intersection"),
         "total_population": sum(d.get("population", 0) for _, d in G.nodes(data=True)),
         "bbox": config.METRO_MANILA_BBOX,
         "note": (
-            "Metro Manila graph built from metro_manila_flood_dataset.csv — "
-            f"{len(origin_zone_nodes(G))} origin zones across {len(cities)} NCR cities, "
-            f"{len(evacuation_center_nodes(G))} named evacuation centres."
+            "Prototype seed graph (Marikina sub-network, 1,250 nodes). "
+            "Full Metro Manila runs use an OSMnx drive network "
+            "(~80,000-150,000 nodes / ~200,000-400,000 edges; "
+            "thesis sample ~5,000-15,000 nodes)."
         ),
     }
