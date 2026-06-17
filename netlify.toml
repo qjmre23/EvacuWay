@@ -1,0 +1,44 @@
+# EvacuWay — Netlify deployment configuration.
+#
+# Build pipeline:
+#   1. Install & build the React/Vite frontend (output → frontend/dist)
+#   2. Netlify bundles web/netlify/functions/api.py as a Python Lambda function
+#
+# Runtime routing:
+#   /health       →  /.netlify/functions/api   (FastAPI health check)
+#   /api/*        →  /.netlify/functions/api   (all API calls)
+#   /*            →  /index.html               (SPA client-side routing)
+#
+# The frontend is built with VITE_API_URL="" so axios uses relative URLs,
+# which hit the redirects above and land on the serverless function.
+
+[build]
+  command   = "cd frontend && npm install --legacy-peer-deps && npm run build"
+  publish   = "frontend/dist"
+  functions = "web/netlify/functions"
+
+[build.environment]
+  VITE_API_URL    = ""
+  NODE_VERSION    = "20"
+  PYTHON_VERSION  = "3.11"
+
+# ── API routes → serverless function ──────────────────────────────────────── #
+
+[[redirects]]
+  from   = "/health"
+  to     = "/.netlify/functions/api"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/api/*"
+  to     = "/.netlify/functions/api"
+  status = 200
+  force  = true
+
+# ── SPA fallback (must be last) ───────────────────────────────────────────── #
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
