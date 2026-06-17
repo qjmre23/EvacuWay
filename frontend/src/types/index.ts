@@ -40,6 +40,10 @@ export interface Center {
   lat: number;
   lon: number;
   elevation: number;
+  district?: string;
+  capacity?: number;
+  source?: "cdra" | "xlsx";
+  official?: boolean;
 }
 
 export interface Origin {
@@ -88,6 +92,21 @@ export interface ResultsBundle {
   statistics: Record<string, unknown>;
   generated_at?: string;
   n_runs?: number;
+}
+
+export interface RainfallStation {
+  name: string;
+  lat: number;
+  lon: number;
+  rainfall_mm_hr: number;
+  observed_at?: string;
+}
+
+export interface RainfallData {
+  stations: RainfallStation[];
+  live: boolean;
+  source: string;
+  observed_at?: string;
 }
 
 export interface RunRecord {

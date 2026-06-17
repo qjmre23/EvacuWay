@@ -38,6 +38,7 @@ import numpy as np
 
 from . import config
 from .data_loader import build_graph, evacuation_center_nodes, origin_zone_nodes
+from .road_snap import get_snapper
 
 # BPR parameters
 BPR_ALPHA = 0.15
@@ -342,12 +343,25 @@ class EvacuationSimulator:
 
         routes = []
         if include_routes:
+            # Snap drawn geometry onto the real OSM road network so map routes
+            # follow streets instead of cutting across blocks. Falls back to raw
+            # straight-line coords if the road artifact is unavailable.
+            snapper = get_snapper()
+            center_targets = None
+            if snapper is not None:
+                center_targets = frozenset(
+                    t for t in (snapper.nearest(self.G.nodes[c]["lat"], self.G.nodes[c]["lon"])
+                                for c in centers)
+                    if t >= 0
+                )
             # return a representative sample of route geometries for the map
             for o in origins[:120]:
                 p = paths.get(o)
                 if not p or len(p) < 2:
                     continue
                 coords = [[self.G.nodes[n]["lat"], self.G.nodes[n]["lon"]] for n in p]
+                if snapper is not None:
+                    coords = snapper.snap_route(coords, center_targets)
                 routes.append({
                     "origin": o, "destination": p[-1],
                     "population": self.G.nodes[o]["population"], "coords": coords,

@@ -33,6 +33,10 @@ data/metro_manila_graph.graphml
 data/nodes.csv
 data/edges.csv
 
+# --- Raw Overpass dump (large; recompile artifact via scripts/build_road_network.mjs) ---
+# The compiled data/marikina_road_network.json IS committed (needed at runtime).
+data/osm_cache/
+
 # --- Android ---
 android/.gradle/
 android/build/

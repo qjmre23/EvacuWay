@@ -62,6 +62,11 @@ python scripts/run_experiment.py
 > The dashboard works **even if the backend is not running**: it falls back to the bundled sample
 > data in `frontend/public/`. With the backend up, it runs live simulations through `POST /api/simulate`.
 
+> **Map routes follow real roads.** Drawn evacuation routes are snapped onto the OpenStreetMap drive
+> network (Marikina), so every line follows streets instead of cutting across blocks — see
+> [docs/road_following.md](docs/road_following.md). Open `frontend/public/route_verify.html` for an
+> interactive A/B/C + flood + roads-vs-straight checker.
+
 ## No authentication
 The API and dashboard are completely open — **no login, no auth, no API keys required**. Optional
 external keys (PAGASA, OpenTopography) go in `.env` only and are never committed.
@@ -86,6 +91,7 @@ Datasets ([docs/revised_dataset_description.md](docs/revised_dataset_description
 Network scale ([docs/network_scale.md](docs/network_scale.md)) ·
 Results ([docs/revised_results_analysis.md](docs/revised_results_analysis.md)) ·
 Setup ([docs/setup.md](docs/setup.md)) ·
+Road-following routes ([docs/road_following.md](docs/road_following.md)) ·
 API ([docs/api_reference.md](docs/api_reference.md)) ·
 Architecture ([docs/architecture.md](docs/architecture.md)) ·
 Deployment ([docs/deployment.md](docs/deployment.md)) ·
