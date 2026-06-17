@@ -17,7 +17,6 @@ backend/venv/
 
 # --- Node / frontend ---
 node_modules/
-frontend/dist/
 frontend/node_modules/
 *.log
 npm-debug.log*

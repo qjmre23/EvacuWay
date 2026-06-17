@@ -1,0 +1,45 @@
+4:53:04 PM: npm error network In most cases you are behind a proxy or have bad network settings.
+4:53:04 PM: npm error network
+4:53:04 PM: npm error network If you are behind a proxy, please make sure that the
+4:53:04 PM: npm error network 'proxy' config is set properly.  See: 'npm help config'
+4:53:04 PM: npm error A complete log of this run can be found in: /opt/buildhome/.npm/_logs/2026-06-17T08_51_53_529Z-debug-0.log
+4:53:04 PM: ​
+4:53:04 PM: "build.command" failed                                        
+4:53:04 PM: ────────────────────────────────────────────────────────────────
+4:53:04 PM: ​
+4:53:04 PM:   Error message
+4:53:04 PM:   Command failed with exit code 1: cd frontend && npm ci --legacy-peer-deps && npm run build (https://ntl.fyi/exit-code-1)
+4:53:04 PM: ​
+4:53:04 PM:   Error location
+4:53:04 PM:   In build.command from netlify.toml:
+4:53:04 PM:   cd frontend && npm ci --legacy-peer-deps && npm run build
+4:53:04 PM: ​
+4:53:04 PM:   Resolved config
+4:53:04 PM:   build:
+4:53:04 PM:     command: cd frontend && npm ci --legacy-peer-deps && npm run build
+4:53:04 PM:     commandOrigin: config
+4:53:04 PM:     environment:
+4:53:04 PM:       - VITE_API_URL
+4:53:04 PM:       - NODE_VERSION
+4:53:04 PM:       - PYTHON_VERSION
+4:53:04 PM:     publish: /opt/build/repo/frontend/dist
+4:53:04 PM:     publishOrigin: config
+4:53:04 PM:   functionsDirectory: /opt/build/repo/web/netlify/functions
+4:53:04 PM:   redirects:
+4:53:04 PM:     - force: true
+4:53:04 PM:       from: /health
+4:53:04 PM:       status: 200
+4:53:04 PM:       to: /.netlify/functions/api
+4:53:04 PM:     - force: true
+4:53:04 PM:       from: /api/*
+      status: 200
+      to: /.netlify/functions/api
+    - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
+4:53:04 PM: Build failed due to a user error: Build script returned non-zero exit code: 2
+4:53:04 PM: Failing build: Failed to build site
+4:53:05 PM: Finished processing build request in 1m19.934s
+Deploying
+Skipped

@@ -1,0 +1,13 @@
+{
+  "stations": [
+    { "name": "Science Garden, Quezon City", "lat": 14.6438, "lon": 121.0437, "rainfall_mm_hr": 9.2 },
+    { "name": "Marikina (Sto. Niño)", "lat": 14.668, "lon": 121.106, "rainfall_mm_hr": 16.8 },
+    { "name": "Taguig (BNS)", "lat": 14.5176, "lon": 121.0509, "rainfall_mm_hr": 11.5 },
+    { "name": "Pasig", "lat": 14.5764, "lon": 121.0851, "rainfall_mm_hr": 6.1 },
+    { "name": "NAIA, Pasay", "lat": 14.5123, "lon": 121.0165, "rainfall_mm_hr": 4.3 },
+    { "name": "Port Area, Manila", "lat": 14.5833, "lon": 120.9667, "rainfall_mm_hr": 2.0 }
+  ],
+  "live": false,
+  "source": "sample",
+  "observed_at": "sample data"
+}

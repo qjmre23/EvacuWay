@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EvacuWay — route verifier (A/B/C)</title>
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+    <style>
+      html, body, #map { height: 100%; margin: 0; }
+      #panel {
+        position: absolute; z-index: 1000; top: 10px; left: 10px; width: 232px;
+        background: rgba(255,255,255,.95); border-radius: 10px; padding: 12px 14px;
+        font: 13px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; color: #1f2937;
+        box-shadow: 0 2px 12px rgba(0,0,0,.28);
+      }
+      #panel h1 { font-size: 14px; margin: 0 0 2px; }
+      #panel .sub { color: #6b7280; font-size: 11px; margin-bottom: 10px; }
+      .row { margin-bottom: 9px; }
+      .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: #6b7280; margin-bottom: 4px; }
+      .seg { display: flex; gap: 5px; }
+      .seg button {
+        flex: 1; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 7px;
+        padding: 6px 0; cursor: pointer; font-weight: 600; color: #374151; font-size: 12px;
+      }
+      .seg button:hover { background: #f3f4f6; }
+      .seg button.active { color: #fff; border-color: transparent; }
+      #stratA.active { background: #2563eb; } #stratB.active { background: #f59e0b; } #stratC.active { background: #dc2626; }
+      .flood button.active { background: #0ea5e9; }
+      .src button.active { background: #111827; }
+      label.chk { display: flex; align-items: center; gap: 6px; font-size: 12px; margin: 3px 0; cursor: pointer; }
+      #count { margin-top: 8px; font-size: 12px; color: #111827; font-weight: 600; }
+      #legend { margin-top: 8px; font-size: 11px; color: #4b5563; }
+      #legend span { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+      .btn { width: 100%; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 7px; padding: 6px; cursor: pointer; font-weight: 600; color: #374151; }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="panel">
+      <h1>EvacuWay route verifier</h1>
+      <div class="sub">Routes snapped to real OSM roads</div>
+
+      <div class="row">
+        <div class="lbl">Strategy</div>
+        <div class="seg" id="strat">
+          <button id="stratA" data-s="A">A · Dijkstra</button>
+          <button id="stratB" data-s="B">B · F-W</button>
+          <button id="stratC" data-s="C">C · Zone</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="lbl">Flood severity</div>
+        <div class="seg flood" id="flood">
+          <button data-f="mild">Mild</button>
+          <button data-f="moderate">Moderate</button>
+          <button data-f="severe">Severe</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="lbl">Route geometry</div>
+        <div class="seg src" id="src">
+          <button data-src="snapped">Roads (fixed)</button>
+          <button data-src="raw">Straight (old)</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="lbl">Layers</div>
+        <label class="chk"><input type="checkbox" id="cOrigins" /> Origin zones</label>
+        <label class="chk"><input type="checkbox" id="cCenters" checked /> Evacuation centres</label>
+      </div>
+
+      <button class="btn" id="fit">Fit all routes</button>
+      <div id="count">—</div>
+      <div id="legend">
+        <span style="background:#2563eb"></span>A
+        <span style="background:#f59e0b"></span>B
+        <span style="background:#dc2626"></span>C
+        &nbsp;·&nbsp; <span style="background:#22c55e"></span>centre
+        <span style="background:#fb923c"></span>origin
+      </div>
+    </div>
+
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <script>
+      const STRAT_COLOR = { A: "#2563eb", B: "#f59e0b", C: "#dc2626" };
+      const params = new URLSearchParams(location.search);
+      const state = {
+        strat: (params.get("scenario") || "C_severe").split("_")[0],
+        flood: (params.get("scenario") || "C_severe").split("_")[1] || "severe",
+        src: params.get("src") === "raw" ? "raw" : "snapped",
+        origins: false,
+        centers: true,
+      };
+
+      const map = L.map("map", { preferCanvas: true, zoomControl: true });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: "© OpenStreetMap",
+      }).addTo(map);
+
+      window.__tilesLoaded = false;
+      map.on("load", () => {});
+      const routeLayer = L.layerGroup().addTo(map);
+      const originLayer = L.layerGroup();
+      const centerLayer = L.layerGroup().addTo(map);
+
+      let SNAPPED = null, RAW = null, NET = null;
+      const scenarioKey = () => `${state.strat}_${state.flood}`;
+      const dataset = () => (state.src === "raw" ? RAW : SNAPPED);
+
+      function draw(fit) {
+        routeLayer.clearLayers();
+        const s = dataset()[scenarioKey()];
+        const pts = [];
+        for (const r of s.routes) {
+          if (!r.coords || r.coords.length < 2) continue;
+          L.polyline(r.coords, { color: STRAT_COLOR[state.strat], weight: 3, opacity: 0.85 }).addTo(routeLayer);
+          for (const p of r.coords) pts.push(p);
+        }
+        document.getElementById("count").textContent =
+          `${scenarioKey()} — ${s.routes.length} routes (${state.src})`;
+        if (fit && pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.05));
+      }
+
+      function drawMarkers() {
+        originLayer.clearLayers();
+        centerLayer.clearLayers();
+        for (const o of NET.origins)
+          L.circleMarker([o.lat, o.lon], { radius: 3, color: "#fb923c", fillColor: "#fb923c", fillOpacity: 0.85, weight: 1 })
+            .bindPopup(`Origin — ${o.barangay}<br>pop ${o.population}`).addTo(originLayer);
+        for (const c of NET.centers)
+          L.circleMarker([c.lat, c.lon], { radius: 5, color: "#16a34a", fillColor: "#22c55e", fillOpacity: 0.95, weight: 1.5 })
+            .bindPopup(`Centre — ${c.name || c.barangay}`).addTo(centerLayer);
+        state.origins ? originLayer.addTo(map) : map.removeLayer(originLayer);
+        state.centers ? centerLayer.addTo(map) : map.removeLayer(centerLayer);
+      }
+
+      function syncButtons() {
+        document.querySelectorAll("#strat button").forEach((b) => b.classList.toggle("active", b.dataset.s === state.strat));
+        document.querySelectorAll("#flood button").forEach((b) => b.classList.toggle("active", b.dataset.f === state.flood));
+        document.querySelectorAll("#src button").forEach((b) => b.classList.toggle("active", b.dataset.src === state.src));
+        document.getElementById("cOrigins").checked = state.origins;
+        document.getElementById("cCenters").checked = state.centers;
+      }
+
+      document.getElementById("strat").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.strat = b.dataset.s; syncButtons(); draw(false); };
+      document.getElementById("flood").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.flood = b.dataset.f; syncButtons(); draw(false); };
+      document.getElementById("src").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.src = b.dataset.src; syncButtons(); draw(false); };
+      document.getElementById("cOrigins").onchange = (e) => { state.origins = e.target.checked; drawMarkers(); };
+      document.getElementById("cCenters").onchange = (e) => { state.centers = e.target.checked; drawMarkers(); };
+      document.getElementById("fit").onclick = () => draw(true);
+
+      // Hooks for the automated screenshot harness.
+      window.__render = (key) => { if (key) { state.strat = key.split("_")[0]; state.flood = key.split("_")[1]; } syncButtons(); draw(false); };
+      window.__setView = (lat, lon, z) => { map.stop(); map.setView([lat, lon], z, { animate: false }); };
+      window.__setSrc = (s) => { state.src = s; syncButtons(); draw(false); };
+      window.__toggleMarkers = (on) => { state.origins = on; state.centers = on; drawMarkers(); };
+      window.__fitAll = () => draw(true);
+
+      Promise.all([
+        fetch("/sample_routes.json").then((r) => r.json()),
+        fetch("/sample_routes.raw.json").then((r) => r.json()).catch(() => null),
+        fetch("/network_data.json").then((r) => r.json()),
+      ]).then(([snapped, raw, net]) => {
+        SNAPPED = snapped; RAW = raw || snapped; NET = net;
+        syncButtons();
+        drawMarkers();
+        draw(true);
+        window.__ready = true;
+      });
+    </script>
+  </body>
+</html>

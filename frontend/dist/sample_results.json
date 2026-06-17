@@ -1,0 +1,996 @@
+{
+  "summary": {
+    "cells": [
+      {
+        "strategy": "A",
+        "flood_level": "mild",
+        "n": 30,
+        "TET": 245.593,
+        "TET_std": 41.914,
+        "AET": 30.713,
+        "AET_std": 1.873,
+        "ECR": 98.44,
+        "ECR_std": 2.579,
+        "NUI": 2.045,
+        "NUI_std": 0.108,
+        "EI": 0.505,
+        "EI_std": 0.027,
+        "SCP": 99.3,
+        "SCP_std": 1.16
+      },
+      {
+        "strategy": "A",
+        "flood_level": "moderate",
+        "n": 30,
+        "TET": 318.167,
+        "TET_std": 57.993,
+        "AET": 35.733,
+        "AET_std": 2.705,
+        "ECR": 94.997,
+        "ECR_std": 3.248,
+        "NUI": 2.069,
+        "NUI_std": 0.123,
+        "EI": 0.555,
+        "EI_std": 0.022,
+        "SCP": 97.0,
+        "SCP_std": 1.942
+      },
+      {
+        "strategy": "A",
+        "flood_level": "severe",
+        "n": 30,
+        "TET": 418.687,
+        "TET_std": 90.417,
+        "AET": 42.747,
+        "AET_std": 5.135,
+        "ECR": 91.397,
+        "ECR_std": 2.686,
+        "NUI": 2.18,
+        "NUI_std": 0.195,
+        "EI": 0.602,
+        "EI_std": 0.034,
+        "SCP": 92.943,
+        "SCP_std": 2.203
+      },
+      {
+        "strategy": "B",
+        "flood_level": "mild",
+        "n": 30,
+        "TET": 156.953,
+        "TET_std": 52.465,
+        "AET": 25.023,
+        "AET_std": 4.906,
+        "ECR": 96.47,
+        "ECR_std": 2.468,
+        "NUI": 1.118,
+        "NUI_std": 0.077,
+        "EI": 0.423,
+        "EI_std": 0.085,
+        "SCP": 98.413,
+        "SCP_std": 1.106
+      },
+      {
+        "strategy": "B",
+        "flood_level": "moderate",
+        "n": 30,
+        "TET": 246.867,
+        "TET_std": 65.35,
+        "AET": 30.873,
+        "AET_std": 5.119,
+        "ECR": 93.677,
+        "ECR_std": 3.54,
+        "NUI": 1.224,
+        "NUI_std": 0.067,
+        "EI": 0.514,
+        "EI_std": 0.059,
+        "SCP": 96.203,
+        "SCP_std": 2.118
+      },
+      {
+        "strategy": "B",
+        "flood_level": "severe",
+        "n": 30,
+        "TET": 363.663,
+        "TET_std": 87.875,
+        "AET": 38.953,
+        "AET_std": 5.787,
+        "ECR": 90.94,
+        "ECR_std": 3.025,
+        "NUI": 1.348,
+        "NUI_std": 0.085,
+        "EI": 0.587,
+        "EI_std": 0.044,
+        "SCP": 92.573,
+        "SCP_std": 2.49
+      },
+      {
+        "strategy": "C",
+        "flood_level": "mild",
+        "n": 30,
+        "TET": 263.85,
+        "TET_std": 50.374,
+        "AET": 45.747,
+        "AET_std": 2.446,
+        "ECR": 98.317,
+        "ECR_std": 2.708,
+        "NUI": 2.035,
+        "NUI_std": 0.086,
+        "EI": 0.405,
+        "EI_std": 0.027,
+        "SCP": 99.243,
+        "SCP_std": 1.225
+      },
+      {
+        "strategy": "C",
+        "flood_level": "moderate",
+        "n": 30,
+        "TET": 347.783,
+        "TET_std": 67.668,
+        "AET": 50.933,
+        "AET_std": 3.682,
+        "ECR": 94.153,
+        "ECR_std": 3.225,
+        "NUI": 2.07,
+        "NUI_std": 0.11,
+        "EI": 0.448,
+        "EI_std": 0.032,
+        "SCP": 96.493,
+        "SCP_std": 1.929
+      },
+      {
+        "strategy": "C",
+        "flood_level": "severe",
+        "n": 30,
+        "TET": 435.517,
+        "TET_std": 95.417,
+        "AET": 57.217,
+        "AET_std": 6.23,
+        "ECR": 90.813,
+        "ECR_std": 2.604,
+        "NUI": 2.154,
+        "NUI_std": 0.207,
+        "EI": 0.487,
+        "EI_std": 0.044,
+        "SCP": 92.477,
+        "SCP_std": 2.13
+      }
+    ],
+    "n_runs": 270,
+    "kpis": [
+      "TET",
+      "AET",
+      "ECR",
+      "NUI",
+      "EI",
+      "SCP"
+    ]
+  },
+  "statistics": {
+    "anova": {
+      "TET": {
+        "mild": {
+          "kpi": "TET",
+          "flood_level": "mild",
+          "F": 41.7568,
+          "p_value": 1.9390023278819866e-13,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.4898,
+          "cohens_f": 0.9798,
+          "levene": {
+            "stat": 2.4786,
+            "p": 0.0898
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.641,
+              "p": 0.0
+            },
+            "B": {
+              "W": 0.9462,
+              "p": 0.1333
+            },
+            "C": {
+              "W": 0.7033,
+              "p": 0.0
+            }
+          },
+          "group_means": {
+            "A": 245.593,
+            "B": 156.953,
+            "C": 263.85
+          }
+        },
+        "moderate": {
+          "kpi": "TET",
+          "flood_level": "moderate",
+          "F": 19.8297,
+          "p_value": 8.023338224509884e-08,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.3131,
+          "cohens_f": 0.6752,
+          "levene": {
+            "stat": 0.1568,
+            "p": 0.8551
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.8569,
+              "p": 0.0009
+            },
+            "B": {
+              "W": 0.9097,
+              "p": 0.0147
+            },
+            "C": {
+              "W": 0.8027,
+              "p": 0.0001
+            }
+          },
+          "group_means": {
+            "A": 318.167,
+            "B": 246.867,
+            "C": 347.783
+          }
+        },
+        "severe": {
+          "kpi": "TET",
+          "flood_level": "severe",
+          "F": 5.0839,
+          "p_value": 0.008163302356565193,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.1046,
+          "cohens_f": 0.3419,
+          "levene": {
+            "stat": 0.0686,
+            "p": 0.9338
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.9168,
+              "p": 0.0222
+            },
+            "B": {
+              "W": 0.9468,
+              "p": 0.1389
+            },
+            "C": {
+              "W": 0.8772,
+              "p": 0.0024
+            }
+          },
+          "group_means": {
+            "A": 418.687,
+            "B": 363.663,
+            "C": 435.517
+          }
+        }
+      },
+      "AET": {
+        "mild": {
+          "kpi": "AET",
+          "flood_level": "mild",
+          "F": 307.459,
+          "p_value": 3.5944474717669145e-40,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.8761,
+          "cohens_f": 2.6586,
+          "levene": {
+            "stat": 16.3671,
+            "p": 0.0
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.7408,
+              "p": 0.0
+            },
+            "B": {
+              "W": 0.9384,
+              "p": 0.0825
+            },
+            "C": {
+              "W": 0.6572,
+              "p": 0.0
+            }
+          },
+          "group_means": {
+            "A": 30.713,
+            "B": 25.023,
+            "C": 45.747
+          }
+        },
+        "moderate": {
+          "kpi": "AET",
+          "flood_level": "moderate",
+          "F": 209.3337,
+          "p_value": 5.63593000849138e-34,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.828,
+          "cohens_f": 2.1937,
+          "levene": {
+            "stat": 6.4717,
+            "p": 0.0024
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.9726,
+              "p": 0.6123
+            },
+            "B": {
+              "W": 0.9345,
+              "p": 0.0649
+            },
+            "C": {
+              "W": 0.9108,
+              "p": 0.0155
+            }
+          },
+          "group_means": {
+            "A": 35.733,
+            "B": 30.873,
+            "C": 50.933
+          }
+        },
+        "severe": {
+          "kpi": "AET",
+          "flood_level": "severe",
+          "F": 84.7218,
+          "p_value": 3.783924528182293e-21,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.6607,
+          "cohens_f": 1.3956,
+          "levene": {
+            "stat": 1.1302,
+            "p": 0.3277
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.9531,
+              "p": 0.2044
+            },
+            "B": {
+              "W": 0.9436,
+              "p": 0.1135
+            },
+            "C": {
+              "W": 0.9313,
+              "p": 0.053
+            }
+          },
+          "group_means": {
+            "A": 42.747,
+            "B": 38.953,
+            "C": 57.217
+          }
+        }
+      },
+      "ECR": {
+        "mild": {
+          "kpi": "ECR",
+          "flood_level": "mild",
+          "F": 5.4596,
+          "p_value": 0.005838942343592837,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.1115,
+          "cohens_f": 0.3543,
+          "levene": {
+            "stat": 0.8921,
+            "p": 0.4135
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.5552,
+              "p": 0.0
+            },
+            "B": {
+              "W": 0.9575,
+              "p": 0.2678
+            },
+            "C": {
+              "W": 0.5665,
+              "p": 0.0
+            }
+          },
+          "group_means": {
+            "A": 98.44,
+            "B": 96.47,
+            "C": 98.317
+          }
+        },
+        "moderate": {
+          "kpi": "ECR",
+          "flood_level": "moderate",
+          "F": 1.2009,
+          "p_value": 0.30584998013882686,
+          "significant": false,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.0269,
+          "cohens_f": 0.1662,
+          "levene": {
+            "stat": 0.9921,
+            "p": 0.375
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.7445,
+              "p": 0.0
+            },
+            "B": {
+              "W": 0.9609,
+              "p": 0.3266
+            },
+            "C": {
+              "W": 0.8066,
+              "p": 0.0001
+            }
+          },
+          "group_means": {
+            "A": 94.997,
+            "B": 93.677,
+            "C": 94.153
+          }
+        },
+        "severe": {
+          "kpi": "ECR",
+          "flood_level": "severe",
+          "F": 0.3661,
+          "p_value": 0.6945198026365667,
+          "significant": false,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.0083,
+          "cohens_f": 0.0917,
+          "levene": {
+            "stat": 0.1882,
+            "p": 0.8288
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.9325,
+              "p": 0.0572
+            },
+            "B": {
+              "W": 0.9389,
+              "p": 0.0848
+            },
+            "C": {
+              "W": 0.9146,
+              "p": 0.0195
+            }
+          },
+          "group_means": {
+            "A": 91.397,
+            "B": 90.94,
+            "C": 90.813
+          }
+        }
+      },
+      "EI": {
+        "mild": {
+          "kpi": "EI",
+          "flood_level": "mild",
+          "F": 29.782,
+          "p_value": 1.4024631560439968e-10,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.4064,
+          "cohens_f": 0.8274,
+          "levene": {
+            "stat": 32.7141,
+            "p": 0.0
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.7333,
+              "p": 0.0
+            },
+            "B": {
+              "W": 0.9631,
+              "p": 0.371
+            },
+            "C": {
+              "W": 0.7049,
+              "p": 0.0
+            }
+          },
+          "group_means": {
+            "A": 0.505,
+            "B": 0.423,
+            "C": 0.405
+          }
+        },
+        "moderate": {
+          "kpi": "EI",
+          "flood_level": "moderate",
+          "F": 52.3855,
+          "p_value": 1.1695551098285086e-15,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.5463,
+          "cohens_f": 1.0974,
+          "levene": {
+            "stat": 14.8746,
+            "p": 0.0
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.9612,
+              "p": 0.3315
+            },
+            "B": {
+              "W": 0.9644,
+              "p": 0.3982
+            },
+            "C": {
+              "W": 0.891,
+              "p": 0.0051
+            }
+          },
+          "group_means": {
+            "A": 0.555,
+            "B": 0.514,
+            "C": 0.448
+          }
+        },
+        "severe": {
+          "kpi": "EI",
+          "flood_level": "severe",
+          "F": 69.6244,
+          "p_value": 8.80210556818152e-19,
+          "significant": true,
+          "df_between": 2,
+          "df_within": 87,
+          "partial_eta_squared": 0.6155,
+          "cohens_f": 1.2651,
+          "levene": {
+            "stat": 1.5669,
+            "p": 0.2145
+          },
+          "shapiro": {
+            "A": {
+              "W": 0.96,
+              "p": 0.3097
+            },
+            "B": {
+              "W": 0.9706,
+              "p": 0.5556
+            },
+            "C": {
+              "W": 0.9294,
+              "p": 0.0473
+            }
+          },
+          "group_means": {
+            "A": 0.602,
+            "B": 0.587,
+            "C": 0.487
+          }
+        }
+      }
+    },
+    "tukey": {
+      "TET": {
+        "mild": {
+          "kpi": "TET",
+          "flood_level": "mild",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -88.64,
+              "p_adj": 0.0,
+              "lower": -118.4793,
+              "upper": -58.8007,
+              "reject": true
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": 18.2567,
+              "p_adj": 0.3157,
+              "lower": -11.5826,
+              "upper": 48.096,
+              "reject": false
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": 106.8967,
+              "p_adj": 0.0,
+              "lower": 77.0574,
+              "upper": 136.736,
+              "reject": true
+            }
+          ]
+        },
+        "moderate": {
+          "kpi": "TET",
+          "flood_level": "moderate",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -71.3,
+              "p_adj": 0.0001,
+              "lower": -110.582,
+              "upper": -32.018,
+              "reject": true
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": 29.6167,
+              "p_adj": 0.1763,
+              "lower": -9.6654,
+              "upper": 68.8987,
+              "reject": false
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": 100.9167,
+              "p_adj": 0.0,
+              "lower": 61.6346,
+              "upper": 140.1987,
+              "reject": true
+            }
+          ]
+        },
+        "severe": {
+          "kpi": "TET",
+          "flood_level": "severe",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -55.0233,
+              "p_adj": 0.0563,
+              "lower": -111.2279,
+              "upper": 1.1812,
+              "reject": false
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": 16.83,
+              "p_adj": 0.7559,
+              "lower": -39.3746,
+              "upper": 73.0346,
+              "reject": false
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": 71.8533,
+              "p_adj": 0.0085,
+              "lower": 15.6488,
+              "upper": 128.0579,
+              "reject": true
+            }
+          ]
+        }
+      },
+      "AET": {
+        "mild": {
+          "kpi": "AET",
+          "flood_level": "mild",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -5.69,
+              "p_adj": 0.0,
+              "lower": -7.7491,
+              "upper": -3.6309,
+              "reject": true
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": 15.0333,
+              "p_adj": 0.0,
+              "lower": 12.9742,
+              "upper": 17.0925,
+              "reject": true
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": 20.7233,
+              "p_adj": 0.0,
+              "lower": 18.6642,
+              "upper": 22.7825,
+              "reject": true
+            }
+          ]
+        },
+        "moderate": {
+          "kpi": "AET",
+          "flood_level": "moderate",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -4.86,
+              "p_adj": 0.0,
+              "lower": -7.299,
+              "upper": -2.421,
+              "reject": true
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": 15.2,
+              "p_adj": 0.0,
+              "lower": 12.761,
+              "upper": 17.639,
+              "reject": true
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": 20.06,
+              "p_adj": 0.0,
+              "lower": 17.621,
+              "upper": 22.499,
+              "reject": true
+            }
+          ]
+        },
+        "severe": {
+          "kpi": "AET",
+          "flood_level": "severe",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -3.7933,
+              "p_adj": 0.0322,
+              "lower": -7.3243,
+              "upper": -0.2624,
+              "reject": true
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": 14.47,
+              "p_adj": 0.0,
+              "lower": 10.9391,
+              "upper": 18.0009,
+              "reject": true
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": 18.2633,
+              "p_adj": 0.0,
+              "lower": 14.7324,
+              "upper": 21.7943,
+              "reject": true
+            }
+          ]
+        }
+      },
+      "ECR": {
+        "mild": {
+          "kpi": "ECR",
+          "flood_level": "mild",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -1.97,
+              "p_adj": 0.0113,
+              "lower": -3.5626,
+              "upper": -0.3774,
+              "reject": true
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": -0.1233,
+              "p_adj": 0.9814,
+              "lower": -1.7159,
+              "upper": 1.4692,
+              "reject": false
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": 1.8467,
+              "p_adj": 0.0189,
+              "lower": 0.2541,
+              "upper": 3.4392,
+              "reject": true
+            }
+          ]
+        },
+        "moderate": {
+          "kpi": "ECR",
+          "flood_level": "moderate",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -1.32,
+              "p_adj": 0.2819,
+              "lower": -3.3769,
+              "upper": 0.7369,
+              "reject": false
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": -0.8433,
+              "p_adj": 0.5929,
+              "lower": -2.9002,
+              "upper": 1.2135,
+              "reject": false
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": 0.4767,
+              "p_adj": 0.8454,
+              "lower": -1.5802,
+              "upper": 2.5335,
+              "reject": false
+            }
+          ]
+        },
+        "severe": {
+          "kpi": "ECR",
+          "flood_level": "severe",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -0.4567,
+              "p_adj": 0.8003,
+              "lower": -2.1668,
+              "upper": 1.2535,
+              "reject": false
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": -0.5833,
+              "p_adj": 0.6958,
+              "lower": -2.2935,
+              "upper": 1.1268,
+              "reject": false
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": -0.1267,
+              "p_adj": 0.983,
+              "lower": -1.8368,
+              "upper": 1.5835,
+              "reject": false
+            }
+          ]
+        }
+      },
+      "EI": {
+        "mild": {
+          "kpi": "EI",
+          "flood_level": "mild",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -0.0819,
+              "p_adj": 0.0,
+              "lower": -0.1148,
+              "upper": -0.049,
+              "reject": true
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": -0.1001,
+              "p_adj": 0.0,
+              "lower": -0.133,
+              "upper": -0.0672,
+              "reject": true
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": -0.0182,
+              "p_adj": 0.3895,
+              "lower": -0.0511,
+              "upper": 0.0147,
+              "reject": false
+            }
+          ]
+        },
+        "moderate": {
+          "kpi": "EI",
+          "flood_level": "moderate",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -0.0406,
+              "p_adj": 0.0007,
+              "lower": -0.0657,
+              "upper": -0.0154,
+              "reject": true
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": -0.1069,
+              "p_adj": 0.0,
+              "lower": -0.1321,
+              "upper": -0.0818,
+              "reject": true
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": -0.0664,
+              "p_adj": 0.0,
+              "lower": -0.0915,
+              "upper": -0.0412,
+              "reject": true
+            }
+          ]
+        },
+        "severe": {
+          "kpi": "EI",
+          "flood_level": "severe",
+          "comparisons": [
+            {
+              "group1": "A",
+              "group2": "B",
+              "meandiff": -0.0145,
+              "p_adj": 0.3625,
+              "lower": -0.0398,
+              "upper": 0.0108,
+              "reject": false
+            },
+            {
+              "group1": "A",
+              "group2": "C",
+              "meandiff": -0.1149,
+              "p_adj": 0.0,
+              "lower": -0.1402,
+              "upper": -0.0896,
+              "reject": true
+            },
+            {
+              "group1": "B",
+              "group2": "C",
+              "meandiff": -0.1004,
+              "p_adj": 0.0,
+              "lower": -0.1257,
+              "upper": -0.0751,
+              "reject": true
+            }
+          ]
+        }
+      }
+    }
+  },
+  "generated_at": "2026-06-17T10:22:21",
+  "n_runs": 270
+}
