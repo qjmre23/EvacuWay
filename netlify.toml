@@ -13,7 +13,7 @@
 # which hit the redirects above and land on the serverless function.
 
 [build]
-  command   = "cd frontend && npm install --legacy-peer-deps && npm run build"
+  command   = "cd frontend && npm ci --legacy-peer-deps && npm run build"
   publish   = "frontend/dist"
   functions = "web/netlify/functions"
 
