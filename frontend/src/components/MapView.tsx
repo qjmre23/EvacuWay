@@ -1,5 +1,34 @@
-import { CircleMarker, MapContainer, Polyline, Popup, TileLayer } from "react-leaflet";
+import { useEffect } from "react";
+import { latLngBounds } from "leaflet";
+import { CircleMarker, MapContainer, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import type { NetworkData, RainfallStation, RouteGeom, Strategy } from "../types";
+
+// Pans / zooms the map to the currently visible points whenever the city filter
+// changes (focusKey). When the filter is cleared it resets to the default view.
+function FitBounds({
+  points,
+  focusKey,
+  defaultCenter,
+  defaultZoom,
+}: {
+  points: [number, number][];
+  focusKey: string;
+  defaultCenter: [number, number];
+  defaultZoom: number;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!focusKey) {
+      map.setView(defaultCenter, defaultZoom, { animate: true });
+      return;
+    }
+    if (points.length > 0) {
+      map.fitBounds(latLngBounds(points), { padding: [40, 40], maxZoom: 15, animate: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusKey]);
+  return null;
+}
 
 const STRAT_COLOR: Record<Strategy, string> = {
   A: "#2563eb",
@@ -47,9 +76,10 @@ interface Props {
   strategy: Strategy;
   layers: LayerToggles;
   rainfall?: RainfallStation[];
+  focusKey?: string;
 }
 
-export default function MapView({ network, routes, strategy, layers, rainfall = [] }: Props) {
+export default function MapView({ network, routes, strategy, layers, rainfall = [], focusKey = "" }: Props) {
   const { bbox } = network;
   // Centre on the actual network (evacuation centres / origins) so routes are
   // visible on load, falling back to the metro bbox midpoint if absent.
@@ -62,6 +92,13 @@ export default function MapView({ network, routes, strategy, layers, rainfall = 
     : [(bbox.min_lat + bbox.max_lat) / 2, (bbox.min_lon + bbox.max_lon) / 2];
   const maxRain = Math.max(1, ...rainfall.map((r) => r.rainfall_mm_hr));
 
+  // Points the filter zooms to (the currently visible nodes for the selected city).
+  const focusPoints: [number, number][] = [
+    ...network.centers.map((c) => [c.lat, c.lon] as [number, number]),
+    ...network.origins.map((o) => [o.lat, o.lon] as [number, number]),
+    ...network.floodPoints.map((p) => [p.lat, p.lon] as [number, number]),
+  ];
+
   return (
     <MapContainer
       center={center}
@@ -73,6 +110,7 @@ export default function MapView({ network, routes, strategy, layers, rainfall = 
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <FitBounds points={focusPoints} focusKey={focusKey} defaultCenter={center} defaultZoom={13} />
 
       {layers.flood &&
         network.floodPoints.map((p, i) => (

@@ -44,6 +44,7 @@ export interface Center {
   capacity?: number;
   source?: "cdra" | "xlsx";
   official?: boolean;
+  city?: string; // derived for the city filter (display only)
 }
 
 export interface Origin {
@@ -53,6 +54,7 @@ export interface Origin {
   lat: number;
   lon: number;
   flood_risk: string;
+  city?: string; // derived for the city filter (display only)
 }
 
 export interface FloodPoint {

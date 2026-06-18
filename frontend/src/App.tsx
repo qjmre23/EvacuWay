@@ -9,8 +9,9 @@ import ScenarioPanel from "./components/ScenarioPanel";
 import { useNetwork } from "./hooks/useNetwork";
 import { useRainfall } from "./hooks/useRainfall";
 import { useSimulation } from "./hooks/useSimulation";
-import type { FloodLevel, KPIs, Strategy } from "./types";
+import type { FloodLevel, KPIs, NetworkData, Strategy } from "./types";
 import { exportCentersPdf } from "./utils/exportPdf";
+import { makeCityResolver } from "./utils/cityAssign";
 
 const CITY_LIST = [
   "Caloocan", "Las Piñas", "Malabon", "Manila", "Marikina", "Muntinlupa",
@@ -64,7 +65,42 @@ export default function App() {
     setTab("map");
   }
 
-  const routes = sim.current?.routes ?? [];
+  // ---- City filter (display only — does not touch the simulation graph) ----
+  // Assign every origin / centre a city by nearest labelled flood point, then
+  // filter the visible map layers (and the drawn routes) to the selected cities.
+  const cityOf = useMemo(
+    () => (network ? makeCityResolver(network.floodPoints) : () => ""),
+    [network]
+  );
+
+  const filteredNetwork: NetworkData | null = useMemo(() => {
+    if (!network) return null;
+    const withCity = {
+      ...network,
+      origins: network.origins.map((o) => ({ ...o, city: o.city ?? cityOf(o.lat, o.lon) })),
+      centers: network.centers.map((c) => ({ ...c, city: c.city ?? cityOf(c.lat, c.lon) })),
+    };
+    if (selectedCities.length === 0) return withCity;
+    const sel = new Set(selectedCities);
+    return {
+      ...withCity,
+      origins: withCity.origins.filter((o) => sel.has(o.city!)),
+      centers: withCity.centers.filter((c) => sel.has(c.city!)),
+      floodPoints: withCity.floodPoints.filter((p) => sel.has(p.city)),
+    };
+  }, [network, cityOf, selectedCities]);
+
+  const allRoutes = sim.current?.routes ?? [];
+  const routes = useMemo(() => {
+    if (selectedCities.length === 0 || !network) return allRoutes;
+    const sel = new Set(selectedCities);
+    return allRoutes.filter((r) => {
+      const start = r.coords?.[0];
+      return start ? sel.has(cityOf(start[0], start[1])) : false;
+    });
+  }, [allRoutes, selectedCities, cityOf, network]);
+
+  const focusKey = selectedCities.slice().sort().join(",");
 
   return (
     <div className="flex h-full flex-col">
@@ -140,14 +176,14 @@ export default function App() {
 
           <button
             onClick={() =>
-              network &&
-              exportCentersPdf(network.centers, {
+              filteredNetwork &&
+              exportCentersPdf(filteredNetwork.centers, {
                 strategy,
                 flood,
-                studyArea: network.meta?.study_area,
+                studyArea: filteredNetwork.meta?.study_area,
               })
             }
-            disabled={!network}
+            disabled={!filteredNetwork}
             className="btn mt-4 w-full bg-white/10 py-2 text-sm font-semibold text-white hover:bg-white/20 disabled:opacity-50"
           >
             ⤓ Download evacuation centres (PDF)
@@ -163,14 +199,15 @@ export default function App() {
           >
             {loading && <LoadingOverlay message="Loading Metro Manila network…" />}
             {sim.running && <LoadingOverlay message="Running simulation…" />}
-            {network && (
+            {filteredNetwork && (
               <>
                 <MapView
-                  network={network}
+                  network={filteredNetwork}
                   routes={layers.routes ? routes : []}
                   strategy={strategy}
                   layers={layers}
                   rainfall={rainfall.stations}
+                  focusKey={focusKey}
                 />
                 <Legend layers={layers} onToggle={toggleLayer} />
               </>
