@@ -13,13 +13,11 @@
 # which hit the redirects above and land on the serverless function.
 
 [build]
-  command   = "cd frontend && npm ci --legacy-peer-deps && npm run build"
+  command   = ""
   publish   = "frontend/dist"
   functions = "web/netlify/functions"
 
 [build.environment]
-  VITE_API_URL    = ""
-  NODE_VERSION    = "20"
   PYTHON_VERSION  = "3.11"
 
 # ── API routes → serverless function ──────────────────────────────────────── #
@@ -35,6 +33,12 @@
   to     = "/.netlify/functions/api"
   status = 200
   force  = true
+
+# ── Hide Replit brand badge (Netlify-only injection) ─────────────────────── #
+
+[[snippets]]
+  location = "head"
+  contents = "<style>[data-key='brand']{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}</style>"
 
 # ── SPA fallback (must be last) ───────────────────────────────────────────── #
 
